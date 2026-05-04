@@ -1,0 +1,28 @@
+# Python (Backend)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+.env
+
+# Flask / Config
+instance/
+*.db
+
+# Logs
+*.log
+
+# VS Code
+.vscode/
+
+# Frontend (if React/Node)
+node_modules/
+build/
+dist/
+
+# OS Files
+.DS_Store
+Thumbs.db

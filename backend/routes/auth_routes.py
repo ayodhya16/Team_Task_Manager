@@ -21,6 +21,8 @@ def register():
         return jsonify({"error": "Fields cannot be empty"}), 400
 
     # check existing user
+    conn = None
+    cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary = True)
@@ -40,8 +42,10 @@ def register():
         return jsonify({"message": "User registered successfully"})
 
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 # login api
@@ -56,6 +60,8 @@ def login():
     if not email or not password:
         return jsonify({"error": "Email and password required"}), 400
 
+    conn = None
+    cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary = True)
@@ -78,5 +84,8 @@ def login():
         })
 
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
