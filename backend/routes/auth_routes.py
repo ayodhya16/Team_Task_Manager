@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from db import get_db_connection
 from utils.helpers import hash_password, check_password, generate_token
+from utils.decorators import token_required
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -89,3 +90,13 @@ def login():
         if conn:
             conn.close()
 
+# profile
+@auth_bp.route('/profile', methods = ["GET"])
+@token_required
+def profile():
+    return jsonify(
+        {
+            "message": "Protected route working",
+            "user" : request.user
+        }
+    )
