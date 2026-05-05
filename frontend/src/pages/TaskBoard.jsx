@@ -31,7 +31,7 @@ const TaskBoard = () => {
 
   const [showMine, setShowMine] = useState(false);
 
-  // 📌 Fetch data
+  // Fetch data
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -56,7 +56,7 @@ const TaskBoard = () => {
     fetchData();
   }, [projectId]);
 
-  // 📌 Filter + group
+  // Filter + group
   const groupedTasks = useMemo(() => {
     const filtered = showMine
       ? tasks.filter((t) => t.assigned_to === user?.id)
@@ -69,7 +69,7 @@ const TaskBoard = () => {
     };
   }, [tasks, showMine, user]);
 
-  // 📌 Create / Update
+  // Create / Update
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -112,7 +112,7 @@ const TaskBoard = () => {
     setAssignedTo("");
   };
 
-  // 📌 Delete
+  //  Delete
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this task?")) return;
 
@@ -120,7 +120,7 @@ const TaskBoard = () => {
     fetchData();
   };
 
-  // 📌 Edit
+  // Edit
   const handleEdit = (task) => {
     setEditingTask(task);
     setTitle(task.title);
@@ -215,7 +215,7 @@ const TaskBoard = () => {
                             .then(fetchData)
                         }
                       >
-                        Progress
+                        In_Progress
                       </Button>
                     )}
 

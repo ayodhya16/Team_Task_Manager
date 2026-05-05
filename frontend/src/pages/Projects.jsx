@@ -1,11 +1,15 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/Layout";
 import api from "../services/api";
-import { AuthContext } from "../context/AuthContext";
+
+// UI
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import Card from "../components/ui/Card";
+import PageHeader from "../components/ui/PageHeader";
 
 const Projects = () => {
-  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [projects, setProjects] = useState([]);
@@ -13,11 +17,14 @@ const Projects = () => {
   const [error, setError] = useState("");
 
   const [showModal, setShowModal] = useState(false);
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
 
+  // 🚀 Fetch projects
   const fetchProjects = async () => {
     try {
       setLoading(true);
@@ -36,7 +43,8 @@ const Projects = () => {
     fetchProjects();
   }, []);
 
-  const handleCreateProject = async (e) => {
+  // Create project
+  const handleCreate = async (e) => {
     e.preventDefault();
     setFormError("");
     setFormLoading(true);
@@ -44,7 +52,6 @@ const Projects = () => {
     try {
       if (!name.trim()) {
         setFormError("Project name is required");
-        setFormLoading(false);
         return;
       }
 
@@ -56,7 +63,8 @@ const Projects = () => {
       setShowModal(false);
       setName("");
       setDescription("");
-      await fetchProjects();
+
+      fetchProjects();
     } catch (err) {
       setFormError(err.response?.data?.error || "Failed to create project");
     } finally {
@@ -64,100 +72,107 @@ const Projects = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <Layout>
+        <div style={styles.info}>Loading projects...</div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div style={styles.error}>{error}</div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
-      <div style={styles.header}>
-        <div>
-          <h1 style={styles.title}>Projects</h1>
-          <p style={styles.subtitle}>Manage your team projects in one place</p>
+      {/* HEADER */}
+      <PageHeader
+        title="Projects"
+        subtitle="Manage your projects and teams"
+        action={
+          <Button onClick={() => setShowModal(true)}>
+            + Create Project
+          </Button>
+        }
+      />
+
+      {/* EMPTY */}
+      {projects.length === 0 ? (
+        <div style={styles.empty}>
+          <h3>No projects yet</h3>
+          <p>Create your first project to get started 🚀</p>
         </div>
+      ) : (
+        <div style={styles.grid}>
+          {projects.map((project) => (
+            <Card key={project.id}>
+              <h3>{project.name}</h3>
 
-        {user?.role === "admin" && (
-          <button style={styles.primaryBtn} onClick={() => setShowModal(true)}>
-            + New Project
-          </button>
-        )}
-      </div>
+              <p style={styles.desc}>
+                {project.description || "No description"}
+              </p>
 
-      {loading && <div style={styles.infoBox}>Loading projects...</div>}
+              <div style={styles.actions}>
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate(`/projects/${project.id}`)}
+                >
+                  View Details
+                </Button>
 
-      {error && <div style={styles.errorBox}>{error}</div>}
-
-      {!loading && !error && projects.length === 0 && (
-        <div style={styles.emptyBox}>
-          <h3 style={{ margin: 0 }}>No projects yet</h3>
-          <p style={{ color: "#6b7280" }}>
-            Create your first project to start organizing tasks.
-          </p>
+                <Button
+                  onClick={() =>
+                    navigate(`/projects/${project.id}/tasks`)
+                  }
+                >
+                  Open Tasks
+                </Button>
+              </div>
+            </Card>
+          ))}
         </div>
       )}
 
-      <div style={styles.grid}>
-        {projects.map((project) => (
-          <div key={project.id} style={styles.card}>
-            <div style={styles.cardTop}>
-              <div>
-                <h3 style={styles.cardTitle}>{project.name}</h3>
-                <p style={styles.cardText}>
-                  {project.description || "No description provided"}
-                </p>
-              </div>
-
-              <span style={styles.roleBadge}>{project.role}</span>
-            </div>
-
-            <div style={styles.cardBottom}>
-              <span style={styles.metaText}>
-                Created at: {new Date(project.created_at).toLocaleDateString()}
-              </span>
-
-              <button
-                style={styles.secondaryBtn}
-                onClick={() => navigate(`/projects/${project.id}`)}
-              >
-                Open
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
+      {/* MODAL */}
       {showModal && (
-        <div style={styles.modalOverlay} onClick={() => setShowModal(false)}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <h2 style={styles.modalTitle}>Create Project</h2>
+        <div style={styles.modal}>
+          <div style={styles.modalBox}>
+            <h2>Create Project</h2>
 
-            {formError && <div style={styles.errorBox}>{formError}</div>}
+            {formError && (
+              <div style={styles.error}>{formError}</div>
+            )}
 
-            <form onSubmit={handleCreateProject} style={styles.form}>
-              <input
-                style={styles.input}
-                type="text"
-                placeholder="Project name"
+            <form onSubmit={handleCreate} style={styles.form}>
+              <Input
+                label="Project Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
 
-              <textarea
-                style={styles.textarea}
-                placeholder="Project description"
+              <Input
+                label="Description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows={4}
               />
 
-              <div style={styles.modalActions}>
-                <button
+              <div style={styles.actions}>
+                <Button type="submit" disabled={formLoading}>
+                  {formLoading ? "Creating..." : "Create"}
+                </Button>
+
+                <Button
                   type="button"
-                  style={styles.cancelBtn}
+                  variant="secondary"
                   onClick={() => setShowModal(false)}
                 >
                   Cancel
-                </button>
-
-                <button type="submit" style={styles.primaryBtn} disabled={formLoading}>
-                  {formLoading ? "Creating..." : "Create"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -168,182 +183,55 @@ const Projects = () => {
 };
 
 const styles = {
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "24px",
-    gap: "16px",
-  },
-  title: {
-    fontSize: "32px",
-    fontWeight: "700",
-    margin: 0,
-    color: "#111827",
-  },
-  subtitle: {
-    marginTop: "6px",
-    color: "#6b7280",
-  },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: "20px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+    gap: "16px",
   },
-  card: {
-    background: "#fff",
-    borderRadius: "18px",
-    padding: "20px",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-    border: "1px solid #eef2f7",
+  desc: {
+    color: "#64748b",
+    fontSize: "14px",
+    marginTop: "6px",
+  },
+  actions: {
     display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    minHeight: "200px",
+    gap: "10px",
+    marginTop: "12px",
+    flexWrap: "wrap",
   },
-  cardTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: "12px",
-  },
-  cardTitle: {
-    margin: 0,
-    fontSize: "20px",
-    fontWeight: "700",
-    color: "#111827",
-  },
-  cardText: {
-    marginTop: "10px",
-    color: "#6b7280",
-    lineHeight: 1.5,
-  },
-  cardBottom: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: "18px",
-    gap: "12px",
-  },
-  metaText: {
-    fontSize: "13px",
-    color: "#6b7280",
-  },
-  roleBadge: {
-    padding: "6px 10px",
-    borderRadius: "999px",
-    background: "#dbeafe",
-    color: "#1d4ed8",
-    fontSize: "12px",
-    fontWeight: "600",
-    height: "fit-content",
-  },
-  primaryBtn: {
-    background: "#2563eb",
-    color: "#fff",
-    border: "none",
-    borderRadius: "12px",
-    padding: "10px 16px",
-    fontWeight: "600",
-    cursor: "pointer",
-  },
-  secondaryBtn: {
-    background: "#f3f4f6",
-    color: "#111827",
-    border: "none",
-    borderRadius: "12px",
-    padding: "10px 16px",
-    fontWeight: "600",
-    cursor: "pointer",
-  },
-  infoBox: {
-    background: "#eff6ff",
-    color: "#1d4ed8",
-    padding: "14px 16px",
-    borderRadius: "12px",
-    marginBottom: "18px",
-  },
-  errorBox: {
-    background: "#fee2e2",
-    color: "#991b1b",
-    padding: "14px 16px",
-    borderRadius: "12px",
-    marginBottom: "18px",
-  },
-  emptyBox: {
-    background: "#fff",
-    borderRadius: "18px",
-    padding: "28px",
-    textAlign: "center",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
-    border: "1px solid #eef2f7",
-    marginBottom: "20px",
-  },
-  modalOverlay: {
+  modal: {
     position: "fixed",
     inset: 0,
-    background: "rgba(0,0,0,0.45)",
+    background: "rgba(0,0,0,0.4)",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    padding: "20px",
-    zIndex: 50,
   },
-  modal: {
-    width: "100%",
-    maxWidth: "520px",
+  modalBox: {
     background: "#fff",
-    borderRadius: "18px",
     padding: "24px",
-    boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
-    boxSizing: "border-box",
-    overflow: "hidden",
-  },
-  modalTitle: {
-    margin: 0,
-    fontSize: "24px",
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: "18px",
+    borderRadius: "18px",
+    width: "100%",
+    maxWidth: "420px",
   },
   form: {
     display: "flex",
     flexDirection: "column",
-    gap: "14px",
-  },
-  input: {
-  width: "100%",
-  boxSizing: "border-box",
-  padding: "12px 14px",
-  borderRadius: "12px",
-  border: "1px solid #d1d5db",
-  outline: "none",
-  fontSize: "15px",
-  },
-  textarea: {
-    width: "100%",
-    boxSizing: "border-box",
-    padding: "12px 14px",
-    borderRadius: "12px",
-    border: "1px solid #d1d5db",
-    outline: "none",
-    fontSize: "15px",
-    resize: "vertical",
-    fontFamily: "inherit",
-    },
-  modalActions: {
-    display: "flex",
-    justifyContent: "flex-end",
     gap: "12px",
-    marginTop: "8px",
   },
-  cancelBtn: {
-    background: "#f3f4f6",
-    color: "#111827",
-    border: "none",
-    borderRadius: "12px",
-    padding: "10px 16px",
-    fontWeight: "600",
-    cursor: "pointer",
+  error: {
+    background: "#fee2e2",
+    padding: "10px",
+    borderRadius: "10px",
+    marginBottom: "10px",
+  },
+  info: {
+    padding: "20px",
+  },
+  empty: {
+    textAlign: "center",
+    marginTop: "40px",
+    color: "#64748b",
   },
 };
 

@@ -15,9 +15,7 @@ const Navbar = () => {
     <header style={styles.navbar}>
       <div>
         <h3 style={styles.title}>Welcome back, {user?.name || "User"}</h3>
-        <p style={styles.subtitle}>
-          {user?.role ? user.role.toUpperCase() : "Member"}
-        </p>
+        
       </div>
 
       <div style={styles.right}>

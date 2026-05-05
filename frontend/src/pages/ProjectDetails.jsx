@@ -4,8 +4,8 @@ import Layout from "../components/layout/Layout";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 
-import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
 
 const ProjectDetails = () => {
   const { id } = useParams();
@@ -19,10 +19,17 @@ const ProjectDetails = () => {
   const [error, setError] = useState("");
 
   const [showAddMember, setShowAddMember] = useState(false);
-
-  // ✅ CHANGED: email instead of ID
   const [email, setEmail] = useState("");
   const [memberError, setMemberError] = useState("");
+
+  // EDIT STATES
+  const [editMode, setEditMode] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+
+  // CHECK ADMIN (PROJECT LEVEL)
+  const isAdmin =
+    members.find((m) => m.id === user?.id)?.role === "admin";
 
   const fetchData = async () => {
     try {
@@ -36,6 +43,7 @@ const ProjectDetails = () => {
 
       setProject(projectRes.data);
       setMembers(membersRes.data);
+
     } catch (err) {
       setError(err.response?.data?.error || "Failed to load project");
     } finally {
@@ -47,58 +55,125 @@ const ProjectDetails = () => {
     fetchData();
   }, [id]);
 
-  // ✅ FIXED: email-based
+  // Set edit values
+  useEffect(() => {
+    if (project) {
+      setEditName(project.name);
+      setEditDesc(project.description || "");
+    }
+  }, [project]);
+
+  // ADD MEMBER
   const handleAddMember = async (e) => {
     e.preventDefault();
     setMemberError("");
 
     try {
-      await api.post(`/projects/${id}/members`, {
-        email: email,
-      });
+      await api.post(`/projects/${id}/members`, { email });
 
-      setShowAddMember(false);
       setEmail("");
+      setShowAddMember(false);
       fetchData();
     } catch (err) {
       setMemberError(err.response?.data?.error || "Failed to add member");
     }
   };
 
-  if (loading) {
-    return (
-      <Layout>
-        <div style={styles.info}>Loading project...</div>
-      </Layout>
-    );
-  }
+  // UPDATE PROJECT
+  const handleUpdateProject = async () => {
+    try {
+      await api.put(`/projects/${id}`, {
+        name: editName,
+        description: editDesc,
+      });
 
-  if (error) {
-    return (
-      <Layout>
-        <div style={styles.error}>{error}</div>
-      </Layout>
-    );
-  }
+      setEditMode(false);
+      fetchData();
+    } catch {
+      alert("Update failed");
+    }
+  };
+
+  // DELETE PROJECT
+  const handleDeleteProject = async () => {
+    if (!window.confirm("Delete this project?")) return;
+
+    try {
+      await api.delete(`/projects/${id}`);
+      navigate("/projects");
+    } catch {
+      alert("Delete failed");
+    }
+  };
+
+  // REMOVE MEMBER
+  const handleRemoveMember = async (memberId) => {
+    if (!window.confirm("Remove this member?")) return;
+
+    try {
+      await api.delete(`/projects/${id}/members/${memberId}`);
+      fetchData();
+    } catch {
+      alert("Failed to remove member");
+    }
+  };
+
+  if (loading) return <Layout>Loading...</Layout>;
+  if (error) return <Layout>{error}</Layout>;
 
   return (
     <Layout>
+      {/* HEADER */}
       <div style={styles.header}>
         <div>
-          <h1 style={styles.title}>{project.name}</h1>
-          <p style={styles.subtitle}>{project.description}</p>
+          {editMode ? (
+            <>
+              <Input
+                label="Project Name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+              <Input
+                label="Description"
+                value={editDesc}
+                onChange={(e) => setEditDesc(e.target.value)}
+              />
+            </>
+          ) : (
+            <>
+              <h1>{project.name}</h1>
+              <p>{project.description}</p>
+            </>
+          )}
         </div>
 
-        <Button onClick={() => navigate(`/projects/${id}/tasks`)}>
-          View Tasks →
-        </Button>
+        <div style={styles.actions}>
+          <Button onClick={() => navigate(`/projects/${id}/tasks`)}>
+            View Tasks →
+          </Button>
+
+          {isAdmin && (
+            <>
+              {editMode ? (
+                <Button onClick={handleUpdateProject}>Save</Button>
+              ) : (
+                <Button onClick={() => setEditMode(true)}>Edit</Button>
+              )}
+
+              <Button variant="danger" onClick={handleDeleteProject}>
+                Delete
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
+      {/* MEMBERS */}
       <div style={styles.section}>
         <div style={styles.sectionHeader}>
           <h2>Team Members</h2>
 
-          {user?.role === "admin" && (
+          {isAdmin && (
             <Button
               variant="secondary"
               onClick={() => setShowAddMember(true)}
@@ -108,44 +183,52 @@ const ProjectDetails = () => {
           )}
         </div>
 
-        <div style={styles.memberGrid}>
+        <div style={styles.grid}>
           {members.map((m) => (
-            <div key={m.id} style={styles.memberCard}>
+            <div key={m.id} style={styles.card}>
               <h4>{m.name}</h4>
               <p style={styles.meta}>{m.email}</p>
               <span style={styles.role}>{m.role}</span>
+
+              {isAdmin && m.id !== user.id && (
+                <button
+                  style={styles.removeBtn}
+                  onClick={() => handleRemoveMember(m.id)}
+                >
+                  Remove
+                </button>
+              )}
             </div>
           ))}
         </div>
       </div>
 
-      {/* MODAL */}
+      {/* ADD MEMBER MODAL */}
       {showAddMember && (
-        <div style={styles.modalOverlay} onClick={() => setShowAddMember(false)}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div style={styles.modal}>
+          <div style={styles.modalBox}>
             <h3>Add Member</h3>
 
-            {memberError && <div style={styles.error}>{memberError}</div>}
+            {memberError && (
+              <p style={{ color: "red" }}>{memberError}</p>
+            )}
 
             <form onSubmit={handleAddMember} style={styles.form}>
               <Input
                 label="User Email"
-                type="email"
-                placeholder="Enter user email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
 
               <div style={styles.actions}>
+                <Button type="submit">Add</Button>
+
                 <Button
-                  type="button"
                   variant="secondary"
                   onClick={() => setShowAddMember(false)}
                 >
                   Cancel
                 </Button>
-
-                <Button type="submit">Add</Button>
               </div>
             </form>
           </div>
@@ -159,15 +242,12 @@ const styles = {
   header: {
     display: "flex",
     justifyContent: "space-between",
-    marginBottom: "30px",
+    marginBottom: "20px",
   },
-  title: {
-    fontSize: "28px",
-    margin: 0,
-  },
-  subtitle: {
-    color: "#6b7280",
-    marginTop: "6px",
+  actions: {
+    display: "flex",
+    gap: "10px",
+    flexWrap: "wrap",
   },
   section: {
     background: "#fff",
@@ -179,15 +259,16 @@ const styles = {
     justifyContent: "space-between",
     marginBottom: "16px",
   },
-  memberGrid: {
+  grid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
     gap: "16px",
   },
-  memberCard: {
-    padding: "16px",
+  card: {
+    padding: "14px",
     background: "#f9fafb",
     borderRadius: "12px",
+    position: "relative",
   },
   meta: {
     fontSize: "13px",
@@ -198,16 +279,18 @@ const styles = {
     background: "#dbeafe",
     padding: "4px 8px",
     borderRadius: "999px",
+    display: "inline-block",
+    marginTop: "6px",
   },
-  info: {
-    padding: "20px",
+  removeBtn: {
+    marginTop: "8px",
+    fontSize: "12px",
+    color: "red",
+    cursor: "pointer",
+    background: "none",
+    border: "none",
   },
-  error: {
-    background: "#fee2e2",
-    padding: "12px",
-    borderRadius: "8px",
-  },
-  modalOverlay: {
+  modal: {
     position: "fixed",
     inset: 0,
     background: "rgba(0,0,0,0.4)",
@@ -215,7 +298,7 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
   },
-  modal: {
+  modalBox: {
     background: "#fff",
     padding: "20px",
     borderRadius: "16px",
@@ -226,11 +309,6 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: "12px",
-  },
-  actions: {
-    display: "flex",
-    justifyContent: "flex-end",
-    gap: "10px",
   },
 };
 
