@@ -4,8 +4,16 @@ import api from "../services/api";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({children}) => {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
 
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(false);
+  }, []);
 
 // load user from localstorage on refresh
 const login = async (email, password) => {
@@ -16,11 +24,9 @@ const login = async (email, password) => {
 
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
-
         setUser(user);
 
         return {success : true};
-
     }
     catch(err){
         return{
@@ -36,12 +42,11 @@ const register = async (name, email, password) =>{
         await api.post("/auth/register", {name, email, password});
 
         return {success : true}
-
     }
     catch(err){
         return{
             success :false,
-            message : err.response?.data?.err || "Registration failed",
+            message : err.response?.data?.error || "Registration failed",
         };
     }
 }
@@ -54,7 +59,7 @@ const logout = () => {
 };
 
 return(
-    <AuthContext.Provider value = {{user, login, register, logout}}>
+    <AuthContext.Provider value = {{user, loading, login, register, logout}}>
         {children}
     </AuthContext.Provider>
 );
