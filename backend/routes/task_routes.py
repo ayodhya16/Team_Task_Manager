@@ -15,7 +15,6 @@ def check_project_membership(cursor, project_id, user_id):
 
 @task_bp.route("/tasks", methods =["POST"])
 @token_required
-@role_required("admin")
 def create_task():
     data = request.json
 
@@ -27,10 +26,10 @@ def create_task():
     project_id = data.get("project_id")
     assigned_to = data.get("assigned_to")
 
+    user_id =request.user["user_id"]
+
     if not title or not project_id:
         return jsonify({"error": "Title and project_id are required"}), 400
-
-    user_id =request.user["user_id"]
 
     conn= None
     cursor =None
