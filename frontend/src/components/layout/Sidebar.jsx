@@ -6,50 +6,104 @@ const Sidebar = () => {
   const menu = [
     { name: "Dashboard", path: "/dashboard" },
     { name: "Projects", path: "/projects" },
-    { name: "Tasks", path: "/tasks" },
   ];
 
   return (
-    <div style={styles.sidebar}>
-      <h2 style={styles.logo}>TaskFlow</h2>
+    <aside style={styles.sidebar}>
+      <div style={styles.brand}>
+        <div style={styles.logo}>T</div>
+        <div>
+          <h2 style={styles.brandTitle}>TaskFlow</h2>
+          <p style={styles.brandSub}>Project Manager</p>
+        </div>
+      </div>
 
-      {menu.map((item) => (
-        <Link
-          key={item.path}
-          to={item.path}
-          style={{
-            ...styles.link,
-            background:
-              location.pathname === item.path ? "#1e40af" : "transparent",
-          }}
-        >
-          {item.name}
-        </Link>
-      ))}
-    </div>
+      <nav style={styles.nav}>
+        {menu.map((item) => {
+          const active = location.pathname === item.path;
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              style={{
+                ...styles.link,
+                background: active ? "#eff6ff" : "transparent",
+                color: active ? "#1d4ed8" : "#475569",
+                borderColor: active ? "#bfdbfe" : "transparent",
+              }}
+            >
+              <span style={styles.dot(active)} />
+              {item.name}
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
   );
 };
 
 const styles = {
   sidebar: {
-    width: "220px",
-    height: "100vh",
-    background: "#1e3a8a",
-    color: "#fff",
-    padding: "20px",
+    width: "260px",
+    minHeight: "100vh",
+    background: "#ffffff",
+    borderRight: "1px solid #e5e7eb",
+    padding: "24px 18px",
+    position: "sticky",
+    top: 0,
+    alignSelf: "flex-start",
+  },
+  brand: {
     display: "flex",
-    flexDirection: "column",
+    alignItems: "center",
+    gap: "12px",
+    marginBottom: "28px",
+    padding: "8px 6px",
   },
   logo: {
-    marginBottom: "30px",
+    width: "44px",
+    height: "44px",
+    borderRadius: "14px",
+    background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+    color: "#fff",
+    display: "grid",
+    placeItems: "center",
+    fontWeight: "800",
+    fontSize: "18px",
+    boxShadow: "0 10px 24px rgba(37,99,235,0.25)",
+  },
+  brandTitle: {
+    margin: 0,
+    fontSize: "18px",
+    fontWeight: "800",
+    color: "#0f172a",
+  },
+  brandSub: {
+    margin: "3px 0 0 0",
+    fontSize: "12px",
+    color: "#64748b",
+  },
+  nav: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
   },
   link: {
-    padding: "12px",
-    borderRadius: "8px",
-    color: "#fff",
-    textDecoration: "none",
-    marginBottom: "10px",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "12px 14px",
+    borderRadius: "14px",
+    border: "1px solid transparent",
+    fontWeight: "600",
+    transition: "0.2s ease",
   },
+  dot: (active) => ({
+    width: "8px",
+    height: "8px",
+    borderRadius: "999px",
+    background: active ? "#2563eb" : "#cbd5e1",
+  }),
 };
 
 export default Sidebar;

@@ -4,6 +4,9 @@ import Layout from "../components/layout/Layout";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 
+import Input from "../components/ui/Input";
+import Button from "../components/ui/Button";
+
 const ProjectDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -16,7 +19,9 @@ const ProjectDetails = () => {
   const [error, setError] = useState("");
 
   const [showAddMember, setShowAddMember] = useState(false);
-  const [newUserId, setNewUserId] = useState("");
+
+  // ✅ CHANGED: email instead of ID
+  const [email, setEmail] = useState("");
   const [memberError, setMemberError] = useState("");
 
   const fetchData = async () => {
@@ -42,17 +47,18 @@ const ProjectDetails = () => {
     fetchData();
   }, [id]);
 
+  // ✅ FIXED: email-based
   const handleAddMember = async (e) => {
     e.preventDefault();
     setMemberError("");
 
     try {
       await api.post(`/projects/${id}/members`, {
-        user_id: newUserId,
+        email: email,
       });
 
       setShowAddMember(false);
-      setNewUserId("");
+      setEmail("");
       fetchData();
     } catch (err) {
       setMemberError(err.response?.data?.error || "Failed to add member");
@@ -83,12 +89,9 @@ const ProjectDetails = () => {
           <p style={styles.subtitle}>{project.description}</p>
         </div>
 
-        <button
-          style={styles.primaryBtn}
-          onClick={() => navigate(`/projects/${id}/tasks`)}
-        >
+        <Button onClick={() => navigate(`/projects/${id}/tasks`)}>
           View Tasks →
-        </button>
+        </Button>
       </div>
 
       <div style={styles.section}>
@@ -96,12 +99,12 @@ const ProjectDetails = () => {
           <h2>Team Members</h2>
 
           {user?.role === "admin" && (
-            <button
-              style={styles.secondaryBtn}
+            <Button
+              variant="secondary"
               onClick={() => setShowAddMember(true)}
             >
               + Add Member
-            </button>
+            </Button>
           )}
         </div>
 
@@ -116,6 +119,7 @@ const ProjectDetails = () => {
         </div>
       </div>
 
+      {/* MODAL */}
       {showAddMember && (
         <div style={styles.modalOverlay} onClick={() => setShowAddMember(false)}>
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -124,26 +128,24 @@ const ProjectDetails = () => {
             {memberError && <div style={styles.error}>{memberError}</div>}
 
             <form onSubmit={handleAddMember} style={styles.form}>
-              <input
-                type="number"
-                placeholder="Enter user ID"
-                value={newUserId}
-                onChange={(e) => setNewUserId(e.target.value)}
-                style={styles.input}
+              <Input
+                label="User Email"
+                type="email"
+                placeholder="Enter user email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
 
               <div style={styles.actions}>
-                <button
+                <Button
                   type="button"
-                  style={styles.cancel}
+                  variant="secondary"
                   onClick={() => setShowAddMember(false)}
                 >
                   Cancel
-                </button>
+                </Button>
 
-                <button type="submit" style={styles.primaryBtn}>
-                  Add
-                </button>
+                <Button type="submit">Add</Button>
               </div>
             </form>
           </div>
@@ -197,21 +199,6 @@ const styles = {
     padding: "4px 8px",
     borderRadius: "999px",
   },
-  primaryBtn: {
-    background: "#2563eb",
-    color: "#fff",
-    padding: "10px 16px",
-    border: "none",
-    borderRadius: "10px",
-    cursor: "pointer",
-  },
-  secondaryBtn: {
-    background: "#f3f4f6",
-    padding: "10px 16px",
-    borderRadius: "10px",
-    border: "none",
-    cursor: "pointer",
-  },
   info: {
     padding: "20px",
   },
@@ -232,28 +219,18 @@ const styles = {
     background: "#fff",
     padding: "20px",
     borderRadius: "16px",
-    width: "400px",
+    width: "100%",
+    maxWidth: "420px",
   },
   form: {
     display: "flex",
     flexDirection: "column",
     gap: "12px",
   },
-  input: {
-    padding: "10px",
-    borderRadius: "8px",
-    border: "1px solid #ddd",
-  },
   actions: {
     display: "flex",
     justifyContent: "flex-end",
     gap: "10px",
-  },
-  cancel: {
-    background: "#e5e7eb",
-    padding: "10px 16px",
-    borderRadius: "10px",
-    border: "none",
   },
 };
 

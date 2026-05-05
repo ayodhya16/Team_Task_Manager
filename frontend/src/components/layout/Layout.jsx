@@ -5,10 +5,8 @@ const Layout = ({ children }) => {
   return (
     <div style={styles.container}>
       <Sidebar />
-
       <div style={styles.main}>
         <Navbar />
-
         <div style={styles.content}>{children}</div>
       </div>
     </div>
@@ -18,14 +16,17 @@ const Layout = ({ children }) => {
 const styles = {
   container: {
     display: "flex",
+    minHeight: "100vh",
+    background: "linear-gradient(180deg, #f8fafc 0%, #f3f4f6 100%)",
   },
   main: {
     flex: 1,
-    background: "#f9fafb",
-    minHeight: "100vh",
+    minWidth: 0,
   },
   content: {
-    padding: "20px",
+    padding: "28px",
+    maxWidth: "1600px",
+    margin: "0 auto",
   },
 };
 
