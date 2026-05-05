@@ -4,7 +4,7 @@ import Layout from "../components/layout/Layout";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 
-// UI components
+// UI
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Card from "../components/ui/Card";
@@ -31,7 +31,11 @@ const TaskBoard = () => {
 
   const [showMine, setShowMine] = useState(false);
 
-  // Fetch data
+  // PROJECT ADMIN CHECK (FIXED)
+  const isAdmin =
+    members.find((m) => m.id === user?.id)?.role === "admin";
+
+  // FETCH DATA
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -56,7 +60,7 @@ const TaskBoard = () => {
     fetchData();
   }, [projectId]);
 
-  // Filter + group
+  // FILTER
   const groupedTasks = useMemo(() => {
     const filtered = showMine
       ? tasks.filter((t) => t.assigned_to === user?.id)
@@ -69,7 +73,7 @@ const TaskBoard = () => {
     };
   }, [tasks, showMine, user]);
 
-  // Create / Update
+  // CREATE / UPDATE
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -112,15 +116,15 @@ const TaskBoard = () => {
     setAssignedTo("");
   };
 
-  //  Delete
+  // DELETE
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this task?")) return;
+    if (!window.confirm("Delete task?")) return;
 
     await api.delete(`/tasks/${id}`);
     fetchData();
   };
 
-  // Edit
+  // EDIT
   const handleEdit = (task) => {
     setEditingTask(task);
     setTitle(task.title);
@@ -132,7 +136,7 @@ const TaskBoard = () => {
   };
 
   if (loading) return <Layout>Loading...</Layout>;
-  if (!project) return <Layout>Project not found</Layout>;
+  if (!project) return <Layout>No project found</Layout>;
 
   return (
     <Layout>
@@ -142,37 +146,38 @@ const TaskBoard = () => {
         subtitle="Manage tasks and track progress"
         action={
           <div style={{ display: "flex", gap: "10px" }}>
-            <Button variant="secondary" onClick={() => setShowMine(!showMine)}>
+            <Button
+              variant="secondary"
+              onClick={() => setShowMine(!showMine)}
+            >
               {showMine ? "All Tasks" : "My Tasks"}
             </Button>
 
-            {user?.role === "admin" && (
-              <Button onClick={() => setShowModal(true)}>+ New Task</Button>
+            {/* FIXED */}
+            {isAdmin && (
+              <Button onClick={() => setShowModal(true)}>
+                + New Task
+              </Button>
             )}
           </div>
         }
       />
 
-      {/* EMPTY */}
-      {tasks.length === 0 && (
-        <p style={{ color: "#64748b" }}>No tasks created yet</p>
-      )}
-
       {/* BOARD */}
       <div style={styles.board}>
         {["todo", "in_progress", "done"].map((status) => (
           <div key={status} style={styles.column}>
-            <h3 style={styles.columnTitle}>{status.toUpperCase()}</h3>
+            <h3>
+              {status === "in_progress"
+                ? "IN PROGRESS"
+                : status.toUpperCase()}
+            </h3>
 
             {groupedTasks[status].length === 0 ? (
               <p style={{ color: "#9ca3af" }}>No tasks</p>
             ) : (
               groupedTasks[status].map((task) => (
                 <Card key={task.id}>
-                  {task.assigned_to === user?.id && (
-                    <span style={styles.badge}>My Task</span>
-                  )}
-
                   <h4>{task.title}</h4>
 
                   <p style={styles.desc}>{task.description}</p>
@@ -184,8 +189,8 @@ const TaskBoard = () => {
                   <p style={styles.meta}>
                     Assigned:{" "}
                     <b>
-                      {members.find((m) => m.id === task.assigned_to)?.name ||
-                        "Unassigned"}
+                      {members.find((m) => m.id === task.assigned_to)
+                        ?.name || "Unassigned"}
                     </b>
                   </p>
 
@@ -215,7 +220,7 @@ const TaskBoard = () => {
                             .then(fetchData)
                         }
                       >
-                        In_Progress
+                        In Progress
                       </Button>
                     )}
 
@@ -233,8 +238,8 @@ const TaskBoard = () => {
                     )}
                   </div>
 
-                  {/* ADMIN */}
-                  {user?.role === "admin" && (
+                  {/* ADMIN ACTIONS FIXED */}
+                  {isAdmin && (
                     <div style={styles.row}>
                       <Button
                         variant="secondary"
@@ -312,7 +317,10 @@ const TaskBoard = () => {
                   {editingTask ? "Update" : "Create"}
                 </Button>
 
-                <Button variant="secondary" onClick={resetForm}>
+                <Button
+                  variant="secondary"
+                  onClick={resetForm}
+                >
                   Cancel
                 </Button>
               </div>
@@ -334,10 +342,6 @@ const styles = {
     background: "#f8fafc",
     padding: "12px",
     borderRadius: "16px",
-  },
-  columnTitle: {
-    marginBottom: "10px",
-    fontWeight: "700",
   },
   desc: {
     fontSize: "14px",
@@ -365,8 +369,8 @@ const styles = {
     background: "#fff",
     padding: "20px",
     borderRadius: "16px",
-    width: "400px",
-    maxWidth : "420px",
+    width: "100%",
+    maxWidth: "420px",
   },
   form: {
     display: "flex",
@@ -377,13 +381,6 @@ const styles = {
     padding: "12px",
     borderRadius: "12px",
     border: "1px solid #e5e7eb",
-  },
-  badge: {
-    background: "#2563eb",
-    color: "#fff",
-    padding: "4px 8px",
-    borderRadius: "999px",
-    fontSize: "11px",
   },
 };
 
