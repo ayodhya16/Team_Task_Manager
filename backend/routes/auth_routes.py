@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from db import get_db_connection
 from utils.helpers import hash_password, check_password, generate_token
 from utils.decorators import token_required
+import re
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -20,6 +21,15 @@ def register():
 
     if not name.strip() or not email.strip() or not password.strip():
         return jsonify({"error": "Fields cannot be empty"}), 400
+    
+    # email validation
+    email_pattern = r"^[a-zA-Z0-9._%+-]+@gmail\.com$"
+
+    if not re.match(email_pattern, email):
+        return jsonify({
+            "error": "Only valid Gmail addresses are allowed"
+            }), 400     
+    
 
     # check existing user
     conn = None
