@@ -5,9 +5,9 @@ import api from "../services/api";
 
 // UI
 import Button from "../components/ui/Button";
-import Input from "../components/ui/Input";
 import Card from "../components/ui/Card";
 import PageHeader from "../components/ui/PageHeader";
+import Input from "..components/ui/Input";
 
 const Projects = () => {
   const navigate = useNavigate();
