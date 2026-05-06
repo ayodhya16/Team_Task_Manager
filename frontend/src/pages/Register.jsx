@@ -20,6 +20,13 @@ const Register = () => {
     setMessage("");
     setLoading(true);
 
+    // Gmail validation
+    if (!email.endsWith("@gmail.com")) {
+      setError("Please enter a valid Gmail address");
+      setLoading(false);
+      return;
+    }
+
     const result = await register(name, email, password);
 
     setLoading(false);
