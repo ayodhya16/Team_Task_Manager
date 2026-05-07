@@ -2,6 +2,7 @@
 
 A full-stack project management web application where users can create projects, invite team members, create tasks, assign tasks, update task status, and track progress with role-based access control.
 This project demonstrates hands-on experience in designing and developing full-stack web applications using REST APIs, backend architecture, relational SQL database design, table relationships, indexing optimization, authentication systems, role-based access control, frontend development, API integration, and real-world cloud deployment using Railway.
+
 ----
 
 ## 1) Project Scope
