@@ -132,7 +132,7 @@ The database is normalized and designed around real relationships.
 - One task belongs to one project.
 - One task can be assigned to one user.
 
-### Relationship Diagram (Text Form)
+### Relationship Diagram 
 
 ```text
 users
